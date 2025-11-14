@@ -21,8 +21,8 @@ export default async function handler(req, res) {
     // Test email content
     const mailOptions = {
       from: 'fatimzahraelhansali@gmail.com',
-      to: 'feetyer53@gmail.com',
-      subject: 'Test Email - Quality App API',
+      to: 'lamiaa.ityel@leoni.com', // Test recipient - change as needed
+      subject: 'Test Email - Quality App API System',
       text: 'This is a test email from the Quality App API server. If you receive this, the email system is working correctly!',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       success: true,
       message: 'Test email sent successfully!',
       emailId: result.messageId,
-      sentTo: 'feetyer53@gmail.com',
+      sentTo: 'lamiaa.ityel@leoni.com',
       sentFrom: 'fatimzahraelhansali@gmail.com',
       timestamp: new Date().toISOString()
     });
