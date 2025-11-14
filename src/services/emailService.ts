@@ -1,5 +1,5 @@
-// Email Service for sending automated alerts
-// Note: In production, this should use a backend API to send emails securely
+// Email Service for sending automated alerts via API server
+// This service calls the Next.js API server to send real emails
 
 export interface EmailAlert {
   operatorName: string;
@@ -8,150 +8,30 @@ export interface EmailAlert {
   timestamp: Date;
 }
 
-// Email addresses for different alert levels
-const EMAIL_ADDRESSES = {
-  level3: 'alert.level3@example.com', // 3 defects - Yellow alert
-  level5: 'alert.level5@example.com', // 5 defects - Orange alert
-  level7: 'alert.level7@example.com', // 7 defects - Red alert
-};
+// API server configuration
+const API_SERVER_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-netlify-site-url.netlify.app' // Replace with your actual deployment URL
+  : 'http://localhost:3001';
 
 // Track sent alerts to avoid duplicates
 const sentAlerts = new Map<string, Set<number>>();
 
 /**
- * Generate email details based on alert level
+ * Email service that integrates with the Next.js API server
+ * Sends real emails via Gmail SMTP through the API server
  */
-function getAlertDetails(level: number, operatorName: string, defectType: string, defectCount: number, timestamp: Date) {
-  const formattedDate = timestamp.toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
-  if (level === 3) {
-    return {
-      subject: `⚠️ Alerte Qualité Niveau 1 - ${operatorName}`,
-      level: 'NIVEAU 1 - ATTENTION (3 défauts)',
-      priority: 'MOYENNE',
-      body: `
-Bonjour,
-
-Une alerte qualité de niveau 1 a été déclenchée pour l'opérateur suivant :
-
-📋 INFORMATIONS DE L'ALERTE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Opérateur        : ${operatorName}
-Type de défaut   : ${defectType}
-Nombre de défauts: ${defectCount}
-Date et heure    : ${formattedDate}
-Niveau d'alerte  : ⚠️ ATTENTION (Jaune)
-
-📌 ACTIONS REQUISES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Entretien avec superviseur/technicien qualité
-✓ Notification à l'école pour supervision
-✓ Analyse des causes racines
-✓ Plan d'action correctif à mettre en place
-
-Veuillez prendre les mesures nécessaires dans les plus brefs délais.
-
-Cordialement,
-Système de Gestion Qualité
-      `
-    };
-  } else if (level === 5) {
-    return {
-      subject: `🟠 Alerte Qualité Niveau 2 - ${operatorName} - ACTION URGENTE`,
-      level: 'NIVEAU 2 - ÉLEVÉ (5 défauts)',
-      priority: 'HAUTE',
-      body: `
-Bonjour,
-
-Une alerte qualité de niveau 2 (ÉLEVÉ) a été déclenchée pour l'opérateur suivant :
-
-📋 INFORMATIONS DE L'ALERTE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Opérateur        : ${operatorName}
-Type de défaut   : ${defectType}
-Nombre de défauts: ${defectCount}
-Date et heure    : ${formattedDate}
-Niveau d'alerte  : 🟠 ÉLEVÉ (Orange)
-
-⚠️ ACTIONS REQUISES URGENTES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Entretien immédiat avec responsable de secteur
-✓ Entretien avec responsable qualité secteur
-✓ Notification pour requalification de l'opérateur
-✓ Analyse approfondie des causes
-✓ Mise en place d'un plan d'action correctif renforcé
-✓ Suivi quotidien pendant 1 semaine
-
-Cette situation nécessite une attention immédiate et des mesures correctives renforcées.
-
-Cordialement,
-Système de Gestion Qualité
-      `
-    };
-  } else if (level === 7) {
-    return {
-      subject: `🔴 ALERTE QUALITÉ CRITIQUE - ${operatorName} - INTERVENTION IMMÉDIATE REQUISE`,
-      level: 'NIVEAU 3 - CRITIQUE (7 défauts)',
-      priority: 'CRITIQUE',
-      body: `
-Bonjour,
-
-⚠️ UNE ALERTE QUALITÉ CRITIQUE (NIVEAU 3) A ÉTÉ DÉCLENCHÉE ⚠️
-
-📋 INFORMATIONS DE L'ALERTE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Opérateur        : ${operatorName}
-Type de défaut   : ${defectType}
-Nombre de défauts: ${defectCount}
-Date et heure    : ${formattedDate}
-Niveau d'alerte  : 🔴 CRITIQUE (Rouge)
-
-🚨 ACTIONS IMMÉDIATES OBLIGATOIRES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Entretien IMMÉDIAT avec Plant Section Manager
-✓ Entretien avec responsable qualité section
-✓ Notification pour 2ème requalification obligatoire
-✓ Décision sur la continuité de l'opérateur au poste
-✓ Audit complet du processus
-✓ Analyse des impacts sur la production
-✓ Mise en place d'un plan d'action correctif d'urgence
-✓ Suivi quotidien renforcé pendant 2 semaines minimum
-
-⚠️ CETTE SITUATION NÉCESSITE UNE INTERVENTION IMMÉDIATE DE LA DIRECTION ⚠️
-
-Merci de traiter cette alerte en priorité absolue.
-
-Cordialement,
-Système de Gestion Qualité
-      `
-    };
-  }
-
-  return {
-    subject: 'Alerte Qualité',
-    level: 'INCONNU',
-    priority: 'INCONNUE',
-    body: 'Alerte qualité détectée.'
-  };
-}
 
 export const emailService = {
   /**
-   * Send email alert based on defect count
+   * Send email alert based on defect count via API server
    * @param alert - Alert information
    * @returns Promise<boolean> - Success status
    */
   async sendAlert(alert: EmailAlert): Promise<boolean> {
     const { operatorName, defectCount, defectType, timestamp } = alert;
     
-    // Create unique key for this operator and defect type
-    const alertKey = `${operatorName}-${defectType}`;
+    // Create unique key for this operator
+    const alertKey = operatorName;
     
     // Initialize set for this operator if not exists
     if (!sentAlerts.has(alertKey)) {
@@ -160,76 +40,107 @@ export const emailService = {
     
     const sentLevels = sentAlerts.get(alertKey)!;
     
-    // Determine which email to send based on defect count
-    let emailAddress: string | null = null;
+    // Determine which alert level should be sent based on defect count
     let alertLevel: number | null = null;
     
     if (defectCount >= 7 && !sentLevels.has(7)) {
-      emailAddress = EMAIL_ADDRESSES.level7;
       alertLevel = 7;
     } else if (defectCount >= 5 && !sentLevels.has(5)) {
-      emailAddress = EMAIL_ADDRESSES.level5;
       alertLevel = 5;
     } else if (defectCount >= 3 && !sentLevels.has(3)) {
-      emailAddress = EMAIL_ADDRESSES.level3;
       alertLevel = 3;
     }
     
-    // If no email needs to be sent, return
-    if (!emailAddress || !alertLevel) {
+    // If no alert needs to be sent, return
+    if (!alertLevel) {
+      console.log(`📧 No alert needed for ${operatorName} with ${defectCount} defects (already sent or threshold not crossed)`);
       return false;
     }
     
     try {
-      // In production, this would call a backend API
-      // For now, we'll just log the email that would be sent
+      console.log(`📧 Sending Level ${alertLevel} alert for ${operatorName} via API server...`);
       
-      // Get alert details based on level
-      const alertDetails = getAlertDetails(alertLevel, operatorName, defectType, defectCount, timestamp);
+      // Call the API server to send the email
+      const response = await fetch(`${API_SERVER_URL}/api/alert-operator`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operateurNom: operatorName,
+          nombreOccurrences: defectCount,
+          previousOccurrences: defectCount - 1, // Assume previous was one less
+          defectType: defectType,
+          timestamp: timestamp.toISOString()
+        }),
+      });
       
+      if (!response.ok) {
+        throw new Error(`API server responded with status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log(`✅ Level ${alertLevel} email sent successfully for ${operatorName}`);
+        console.log(`📧 Email ID: ${result.emailId}`);
+        console.log(`📧 Escalation Level: ${result.escalationLevel}`);
+        
+        // Mark this level as sent
+        sentLevels.add(alertLevel);
+        
+        return true;
+      } else {
+        console.error('❌ API server returned error:', result.error);
+        return false;
+      }
+      
+    } catch (error) {
+      console.error('❌ Error calling API server for email alert:', error);
+      
+      // Fallback: Log the alert details for debugging
       console.log('\n' + '='.repeat(80));
-      console.log('📧 EMAIL ALERT SENT');
+      console.log('📧 EMAIL ALERT (API FAILED - LOGGED ONLY)');
       console.log('='.repeat(80));
-      console.log(`To: ${emailAddress}`);
-      console.log(`Subject: ${alertDetails.subject}`);
-      console.log(`Alert Level: ${alertDetails.level}`);
-      console.log(`Priority: ${alertDetails.priority}`);
-      console.log('-'.repeat(80));
-      console.log('EMAIL BODY:');
-      console.log('-'.repeat(80));
-      console.log(alertDetails.body);
+      console.log(`Operator: ${operatorName}`);
+      console.log(`Defect Count: ${defectCount}`);
+      console.log(`Defect Type: ${defectType}`);
+      console.log(`Alert Level: ${alertLevel}`);
+      console.log(`Timestamp: ${timestamp.toLocaleString('fr-FR')}`);
+      console.log(`API URL: ${API_SERVER_URL}/api/alert-operator`);
+      console.log(`Error: ${error}`);
       console.log('='.repeat(80) + '\n');
       
-      // Mark this level as sent
-      sentLevels.add(alertLevel);
-      
-      return true;
-    } catch (error) {
-      console.error('Error sending email alert:', error);
       return false;
     }
   },
   
   /**
-   * Update email addresses for alert levels
-   * @param level - Alert level (3, 5, or 7)
-   * @param email - Email address
+   * Test the API server connection
    */
-  updateEmailAddress(level: 3 | 5 | 7, email: string): void {
-    if (level === 3) {
-      EMAIL_ADDRESSES.level3 = email;
-    } else if (level === 5) {
-      EMAIL_ADDRESSES.level5 = email;
-    } else if (level === 7) {
-      EMAIL_ADDRESSES.level7 = email;
+  async testConnection(): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_SERVER_URL}/api/test-email`);
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('✅ API server connection test successful');
+        return true;
+      } else {
+        console.error('❌ API server test failed:', result.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ API server connection failed:', error);
+      return false;
     }
   },
   
   /**
-   * Get current email addresses
+   * Get API server URL
    */
-  getEmailAddresses() {
-    return { ...EMAIL_ADDRESSES };
+  getApiUrl(): string {
+    return API_SERVER_URL;
   },
   
   /**
@@ -237,5 +148,6 @@ export const emailService = {
    */
   resetAlerts(): void {
     sentAlerts.clear();
+    console.log('🔄 Email alert tracking reset');
   }
 };
