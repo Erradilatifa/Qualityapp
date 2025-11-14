@@ -447,9 +447,9 @@ const AnalyseDashboard: React.FC = () => {
             opDate = operatorDate;
           } else if (typeof operatorDate === 'string') {
             opDate = new Date(operatorDate);
-          } else if (operatorDate && typeof operatorDate === 'object' && operatorDate.seconds) {
+          } else if (operatorDate && typeof operatorDate === 'object' && 'seconds' in operatorDate && (operatorDate as any).seconds) {
             // Format Firebase Timestamp
-            opDate = new Date(operatorDate.seconds * 1000);
+            opDate = new Date((operatorDate as any).seconds * 1000);
           } else {
             return true; // Garder si format inconnu
           }
