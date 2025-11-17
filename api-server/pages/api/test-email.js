@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const ALLOWED_ORIGIN = 'https://reworkqualityleonisystem.netlify.app';
 
 /**
  * API Route: /api/test-email
@@ -6,6 +7,12 @@ const nodemailer = require('nodemailer');
  * Purpose: Test email functionality
  */
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
   try {
     console.log('🧪 Testing email functionality...');
 
