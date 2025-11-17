@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     // Test email content
     const mailOptions = {
       from: 'fatimzahraelhansali@gmail.com',
-      to: 'lamiaa.ityel@leoni.com', // Test recipient - change as needed
+      to: 'mehdifadil2103@gmail.com',
       subject: 'Test Email - Quality App API System',
       text: 'This is a test email from the Quality App API server. If you receive this, the email system is working correctly!',
       html: `
