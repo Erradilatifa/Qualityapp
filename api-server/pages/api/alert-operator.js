@@ -9,7 +9,10 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const ALLOWED_ORIGIN = 'https://reworkqualityleonisystem.netlify.app';
+const ALLOWED_ORIGINS = [
+  'https://reworkqualityleonisystem.netlify.app',
+  'https://qualityapp-v2.vercel.app'
+];
 
 /**
  * Get email configuration based on escalation level
@@ -164,13 +167,19 @@ async function sendEscalationAlert(operatorName, defectCount, level, defectType,
  */
 export default async function handler(req, res) {
   // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.status(200).end();
+    return;
   }
   
   // Only allow POST requests
