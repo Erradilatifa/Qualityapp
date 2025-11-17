@@ -193,7 +193,7 @@ async function sendEscalationAlert(operatorName, defectCount, level) {
 function getEmailConfigForLevel(level, operatorName) {
   const configs = {
     3: {
-      recipients: 'mehdifadil2103@gmail.com',
+      recipients: 'mehdifadil2103@gmail.com, erradilatifa6@gmail.com',
       subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 3 défauts internes_Escalation_Niveau 1`,
       message: `
         Bonjour,<br><br>
@@ -208,7 +208,7 @@ function getEmailConfigForLevel(level, operatorName) {
       `
     },
     5: {
-      recipients: 'mehdifadil2103@gmail.com',
+      recipients: 'mehdifadil2103@gmail.com, erradilatifa6@gmail.com',
       subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 5 défauts internes_Escalation_Niveau 2`,
       message: `
         Bonjour,<br><br>
@@ -223,7 +223,7 @@ function getEmailConfigForLevel(level, operatorName) {
       `
     },
     7: {
-      recipients: 'mehdifadil2103@gmail.com',
+      recipients: 'mehdifadil2103@gmail.com, erradilatifa6@gmail.com',
       subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 7 défauts internes_Escalation_Niveau 3`,
       message: `
         Bonjour,<br><br>
