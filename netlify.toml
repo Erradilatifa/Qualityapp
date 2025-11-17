@@ -1,6 +1,6 @@
 [build]
   publish = "dist"
-  command = "npx expo export --platform web && cp _redirects dist/_redirects"
+  command = "npx expo export --platform web"
 
 [build.environment]
   NODE_VERSION = "18"
