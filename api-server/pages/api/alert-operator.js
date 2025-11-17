@@ -33,20 +33,37 @@ export default async function handler(req, res) {
   try {
     console.log('🔍 Received alert request:', JSON.stringify(req.body, null, 2));
 
-    // Extract data from request body
+    // Extract data from request body with defaults
     const { 
       operateurNom, 
-      nombreOccurrences, 
+      nombreOccurrences = 0, 
       previousOccurrences = 0,
-      operatorId 
+      operatorId,
+      timestamp,
+      defectType = 'Non spécifié'
     } = req.body;
 
+    // Ensure we have valid numbers
+    const currentCount = Number.isInteger(Number(nombreOccurrences)) ? Number(nombreOccurrences) : 0;
+    const prevCount = Number.isInteger(Number(previousOccurrences)) ? Number(previousOccurrences) : 0;
+
     // Validate required fields
-    if (!operateurNom || typeof nombreOccurrences !== 'number') {
+    if (!operateurNom) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: operateurNom, nombreOccurrences'
+        error: 'Le nom de l\'opérateur est requis (operateurNom)'
       });
+    }
+
+    // Ensure we have valid dates
+    let alertTimestamp;
+    try {
+      alertTimestamp = timestamp ? new Date(timestamp) : new Date();
+      if (isNaN(alertTimestamp.getTime())) {
+        alertTimestamp = new Date();
+      }
+    } catch (e) {
+      alertTimestamp = new Date();
     }
 
     console.log(`👤 Operator: ${operateurNom}`);
@@ -58,22 +75,22 @@ export default async function handler(req, res) {
     let emailResult = null;
 
     // Determine which threshold was crossed
-    if (nombreOccurrences >= 7 && previousOccurrences < 7) {
+    if (currentCount >= 7 && prevCount < 7) {
       alertLevel = 7;
-    } else if (nombreOccurrences >= 5 && previousOccurrences < 5) {
+    } else if (currentCount >= 5 && prevCount < 5) {
       alertLevel = 5;
-    } else if (nombreOccurrences >= 3 && previousOccurrences < 3) {
+    } else if (currentCount >= 3 && prevCount < 3) {
       alertLevel = 3;
     }
 
     if (alertLevel) {
-      console.log(`🚨 ALERT TRIGGERED: ${operateurNom} reached ${alertLevel} defects! (Level ${alertLevel} escalation)`);
+      console.log(`🚨 ALERT TRIGGERED: ${operateurNom} reached ${currentCount} defects! (Level ${alertLevel} escalation)`);
 
       // Send email alert for the appropriate level
-      emailResult = await sendEscalationAlert(operateurNom, nombreOccurrences, alertLevel);
+      emailResult = await sendEscalationAlert(operateurNom, currentCount, alertLevel, defectType, alertTimestamp);
 
       // Log success
-      console.log(`✅ Level ${alertLevel} alert sent successfully for ${operateurNom}`);
+      console.log(`✅ Level ${alertLevel} alert sent successfully for ${operateurNom} at ${alertTimestamp.toISOString()}`);
 
       return res.status(200).json({
         success: true,
@@ -93,8 +110,9 @@ export default async function handler(req, res) {
         success: true,
         message: 'No alert needed - no threshold crossed',
         operator: operateurNom,
-        defectCount: nombreOccurrences,
-        previousCount: previousOccurrences,
+        defectCount: currentCount,
+        previousCount: prevCount,
+        defectType: defectType,
         timestamp: new Date().toISOString()
       });
     }

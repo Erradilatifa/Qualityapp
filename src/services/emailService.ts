@@ -18,15 +18,30 @@ const sentAlerts = new Map<string, Set<number>>();
 
 const toISO = (t: any): string => {
   try {
+    // If no timestamp provided, use current date
     if (!t) return new Date().toISOString();
-    if (t instanceof Date && !isNaN(t.getTime())) return t.toISOString();
+    
+    // If already a valid Date object
+    if (t instanceof Date) {
+      return isNaN(t.getTime()) ? new Date().toISOString() : t.toISOString();
+    }
+    
+    // If it's a Firestore Timestamp
     if (typeof t?.toDate === 'function') {
       const d = t.toDate();
-      return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+      return d instanceof Date && !isNaN(d.getTime()) ? d.toISOString() : new Date().toISOString();
     }
-    const d = new Date(t);
-    return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
-  } catch {
+    
+    // If it's a string or number, try to parse it
+    if (typeof t === 'string' || typeof t === 'number') {
+      const d = new Date(t);
+      return !isNaN(d.getTime()) ? d.toISOString() : new Date().toISOString();
+    }
+    
+    // For any other case, return current date
+    return new Date().toISOString();
+  } catch (error) {
+    console.error('Error formatting date:', error);
     return new Date().toISOString();
   }
 };
