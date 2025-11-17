@@ -1,17 +1,34 @@
 const nodemailer = require('nodemailer');
 const Cors = require('cors');
 
-// Initialiser le middleware CORS
-const cors = Cors({
-  origin: [
-    'https://reworkqualityleonisystem.netlify.app',
-    'https://qualityapp-v2.vercel.app',
-    'https://zesty-paprenjak-741d94.netlify.app'
-  ],
+// Configuration CORS
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://reworkqualityleonisystem.netlify.app',
+      'https://qualityapp-v2.vercel.app',
+      'https://zesty-paprenjak-741d94.netlify.app',
+      'http://localhost:3000' // Pour le développement local
+    ];
+    
+    // Autoriser les requêtes sans origine (comme Postman) en développement
+    if (!origin && process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-});
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  optionsSuccessStatus: 200 // Pour les anciens navigateurs
+};
+
+const cors = Cors(corsOptions);
 
 // Helper pour exécuter le middleware
 function runMiddleware(req, res, fn) {
@@ -304,7 +321,16 @@ async function handler(req, res) {
 
 // Exporter le handler avec le middleware CORS
 module.exports = async (req, res) => {
-  // Exécuter le middleware CORS
+  // Gérer les requêtes OPTIONS (prévol) directement
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    return res.status(200).end();
+  }
+
+  // Exécuter le middleware CORS pour les autres requêtes
   await runMiddleware(req, res, cors);
   
   // Gérer la requête
@@ -315,7 +341,7 @@ module.exports = async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: 'Internal server error',
-      details: error.message 
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
