@@ -183,7 +183,7 @@ async function sendEscalationAlert(operatorName, defectCount, level) {
                 </tr>
                 <tr>
                   <td style="padding: 5px 0; font-weight: bold; color: #495057;">Date et heure:</td>
-                  <td style="padding: 5px 0; color: #495057;">${new Date().toLocaleString('fr-FR')}</td>
+                  <td style="padding: 5px 0; color: #495057;">${new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Casablanca' })}</td>
                 </tr>
               </table>
             </div>
@@ -216,9 +216,12 @@ async function sendEscalationAlert(operatorName, defectCount, level) {
  * Get email configuration based on escalation level
  */
 function getEmailConfigForLevel(level, operatorName) {
+  // Define the recipients for all levels
+  const recipients = 'mehdifadil2103@gmail.com, erradilatifa6@gmail.com';
+  
   const configs = {
     3: {
-      recipients: 'mehdifadil2103@gmail.com, erradilatifa6@gmail.com',
+      recipients: recipients,
       subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 3 défauts internes_Escalation_Niveau 1`,
       message: `
         Bonjour,<br><br>
@@ -233,7 +236,7 @@ function getEmailConfigForLevel(level, operatorName) {
       `
     },
     5: {
-      recipients: 'mehdifadil2103@gmail.com, erradilatifa6@gmail.com',
+      recipients: recipients,
       subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 5 défauts internes_Escalation_Niveau 2`,
       message: `
         Bonjour,<br><br>
@@ -248,7 +251,7 @@ function getEmailConfigForLevel(level, operatorName) {
       `
     },
     7: {
-      recipients: 'mehdifadil2103@gmail.com, erradilatifa6@gmail.com',
+      recipients: recipients,
       subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 7 défauts internes_Escalation_Niveau 3`,
       message: `
         Bonjour,<br><br>
