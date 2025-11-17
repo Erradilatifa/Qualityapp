@@ -19,17 +19,16 @@ const ALLOWED_ORIGINS = [
 const corsMiddleware = (handler) => async (req, res) => {
   const origin = req.headers.origin;
   
-  // Set CORS headers
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  }
-
+  // Set CORS headers for all responses
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.status(200).end();
+    return { end: true }; // Return early for OPTIONS
   }
 
   return handler(req, res);
@@ -187,6 +186,12 @@ async function sendEscalationAlert(operatorName, defectCount, level, defectType,
  * Purpose: Send email alert when operator exceeds defect threshold
  */
 async function handler(req, res) {
+  // Set CORS headers for the main request
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
   
   // Only allow POST requests
   if (req.method !== 'POST') {
@@ -296,4 +301,22 @@ async function handler(req, res) {
 }
 
 // Apply CORS middleware to the handler
-module.exports = corsMiddleware(handler);
+const wrappedHandler = corsMiddleware(handler);
+
+module.exports = async (req, res) => {
+  const result = await wrappedHandler(req, res);
+  // If the middleware returned an object with end:true, don't continue
+  if (result?.end) return;
+  
+  // Otherwise, handle the request
+  try {
+    await handler(req, res);
+  } catch (error) {
+    console.error('Unhandled error in API route:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+};
