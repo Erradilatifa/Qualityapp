@@ -100,7 +100,7 @@ export default async function handler(req, res) {
         defectCount: nombreOccurrences,
         escalationLevel: alertLevel,
         recipients: getEmailConfigForLevel(alertLevel, operateurNom).recipients,
-        timestamp: new Date().toISOString()
+        timestamp: alertTimestamp.toISOString()
       });
 
     } else {
@@ -113,7 +113,7 @@ export default async function handler(req, res) {
         defectCount: currentCount,
         previousCount: prevCount,
         defectType: defectType,
-        timestamp: new Date().toISOString()
+        timestamp: alertTimestamp.toISOString()
       });
     }
 
@@ -124,7 +124,7 @@ export default async function handler(req, res) {
       success: false,
       error: 'Internal server error',
       details: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: alertTimestamp.toISOString()
     });
   }
 }
@@ -132,7 +132,7 @@ export default async function handler(req, res) {
 /**
  * Send escalation alert based on defect level
  */
-async function sendEscalationAlert(operatorName, defectCount, level) {
+async function sendEscalationAlert(operatorName, defectCount, level, defectType, alertTimestamp) {
   try {
     console.log(`📧 Sending Level ${level} escalation alert for operator: ${operatorName}`);
 
@@ -183,7 +183,7 @@ async function sendEscalationAlert(operatorName, defectCount, level) {
                 </tr>
                 <tr>
                   <td style="padding: 5px 0; font-weight: bold; color: #495057;">Date et heure:</td>
-                  <td style="padding: 5px 0; color: #495057;">${new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Casablanca' })}</td>
+                  <td style="padding: 5px 0; color: #495057;">${alertTimestamp.toLocaleString('fr-FR', { timeZone: 'Africa/Casablanca' })}</td>
                 </tr>
               </table>
             </div>
@@ -192,7 +192,7 @@ async function sendEscalationAlert(operatorName, defectCount, level) {
             <div style="text-align: center; padding-top: 20px; border-top: 1px solid #dee2e6;">
               <p style="font-size: 12px; color: #6c757d; margin: 0;">
                 Notification automatique générée par le Système de Gestion Qualité<br>
-                LEONI Wiring Systems - ${new Date().toLocaleDateString('fr-FR')}
+                LEONI Wiring Systems - ${alertTimestamp.toLocaleDateString('fr-FR', { timeZone: 'Africa/Casablanca' })}
               </p>
             </div>
 
