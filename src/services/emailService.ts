@@ -100,6 +100,9 @@ export const emailService = {
         console.log(`✅ Level ${alertLevel} email sent successfully for ${operatorName}`);
         console.log(`📧 Email ID: ${result.emailId}`);
         console.log(`📧 Escalation Level: ${result.escalationLevel}`);
+        if (result.recipients) {
+          console.log(`📧 Recipients: ${result.recipients}`);
+        }
         
         // Mark this level as sent
         sentLevels.add(alertLevel);

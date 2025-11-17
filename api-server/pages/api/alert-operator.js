@@ -75,6 +75,7 @@ export default async function handler(req, res) {
         operator: operateurNom,
         defectCount: nombreOccurrences,
         escalationLevel: alertLevel,
+        recipients: getEmailConfigForLevel(alertLevel, operateurNom).recipients,
         timestamp: new Date().toISOString()
       });
 
