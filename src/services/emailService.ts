@@ -10,11 +10,26 @@ export interface EmailAlert {
 
 // API server configuration
 const API_SERVER_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-netlify-site-url.netlify.app' // Replace with your actual deployment URL
+  ? 'https://qualityapp-v2.vercel.app'
   : 'http://localhost:3001';
 
 // Track sent alerts to avoid duplicates
 const sentAlerts = new Map<string, Set<number>>();
+
+const toISO = (t: any): string => {
+  try {
+    if (!t) return new Date().toISOString();
+    if (t instanceof Date && !isNaN(t.getTime())) return t.toISOString();
+    if (typeof t?.toDate === 'function') {
+      const d = t.toDate();
+      return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+    }
+    const d = new Date(t);
+    return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+};
 
 /**
  * Email service that integrates with the Next.js API server
@@ -69,9 +84,9 @@ export const emailService = {
         body: JSON.stringify({
           operateurNom: operatorName,
           nombreOccurrences: defectCount,
-          previousOccurrences: defectCount - 1, // Assume previous was one less
+          previousOccurrences: defectCount - 1,
           defectType: defectType,
-          timestamp: timestamp.toISOString()
+          timestamp: toISO(timestamp)
         }),
       });
       

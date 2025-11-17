@@ -2,7 +2,7 @@ import { operatorService } from './database';
 
 // Configuration - Update these URLs for production
 const API_SERVER_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-netlify-site-url.netlify.app' // Replace with your actual Netlify URL
+  ? 'https://qualityapp-v2.vercel.app'
   : 'http://localhost:3001';
 const ALERT_ENDPOINT = '/api/alert-operator';
 const TEST_ENDPOINT = '/api/test-email';
