@@ -10,8 +10,8 @@ export interface EmailAlert {
 
 // API server configuration
 const API_SERVER_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://qualityapp-v2.vercel.app'
-  : 'http://localhost:3001';
+  ? 'https://qualityapp-v2.vercel.app/api'
+  : 'http://localhost:3001/api';
 
 // Track sent alerts to avoid duplicates
 const sentAlerts = new Map<string, Set<number>>();

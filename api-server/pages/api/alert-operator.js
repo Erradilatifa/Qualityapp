@@ -12,17 +12,168 @@ const transporter = nodemailer.createTransport({
 const ALLOWED_ORIGIN = 'https://reworkqualityleonisystem.netlify.app';
 
 /**
+ * Get email configuration based on escalation level
+ */
+function getEmailConfigForLevel(level, operatorName) {
+  // Define the recipients for all levels
+  const recipients = 'mehdifadil2103@gmail.com, erradilatifa6@gmail.com';
+  
+  const configs = {
+    3: {
+      recipients: recipients,
+      subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 3 défauts internes_Escalation_Niveau 1`,
+      message: `
+        Bonjour,<br><br>
+        L'opérateur <strong>${operatorName}</strong> a atteint <strong>3 défauts internes</strong> aujourd'hui.<br><br>
+        Conformément à notre procédure, une sensibilisation sur terrain est requise, incluant :<br>
+        • Une reformation immédiate par le formateur ligne,<br>
+        • Un entretien avec le Shift Leader, l'agent qualité, et le coordinateur formateur,<br>
+        • La signature d'un engagement écrit par l'opérateur.<br><br>
+        Merci de planifier cette action dans les plus brefs délais.<br><br>
+        Cordialement,<br>
+        <strong>Service qualité</strong>
+      `
+    },
+    5: {
+      recipients: recipients,
+      subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 5 défauts internes_Escalation_Niveau 2`,
+      message: `
+        Bonjour,<br><br>
+        L'opérateur <strong>${operatorName}</strong> a atteint <strong>5 défauts internes</strong> aujourd'hui.<br><br>
+        Il doit être orienté vers l'École de formation pour une requalification, incluant :<br>
+        • Un test de vigilance validé par l'agent qualité,<br>
+        • Un entretien avec le responsable segment, le responsable qualité, et le coordinateur formateur,<br>
+        • La signature d'un engagement écrit par l'opérateur.<br><br>
+        Merci de coordonner cette requalification rapidement.<br><br>
+        Cordialement,<br>
+        <strong>Service qualité</strong>
+      `
+    },
+    7: {
+      recipients: recipients,
+      subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 7 défauts internes_Escalation_Niveau 3`,
+      message: `
+        Bonjour,<br><br>
+        L'opérateur <strong>${operatorName}</strong> a atteint <strong>7 défauts internes</strong> aujourd'hui.<br><br>
+        Une 2ème requalification à l'École de formation est requise, accompagnée de :<br>
+        • Un entretien avec le PSM, le Responsable Qualité Site, le Responsable Formation École, et le Head of HR,<br>
+        • Une décision à prendre :<br>
+        &nbsp;&nbsp;→ Si l'opérateur montre un engagement clair → 3ème chance accordée,<br>
+        &nbsp;&nbsp;→ Sinon → réorientation ou fin de contrat.<br><br>
+        Merci de traiter ce dossier avec attention et diligence.<br><br>
+        Cordialement,<br>
+        <strong>Service qualité</strong>
+      `
+    }
+  };
+
+  return configs[level] || configs[3]; // Default to level 3 if level not found
+}
+
+/**
+ * Send escalation alert based on defect level
+ */
+async function sendEscalationAlert(operatorName, defectCount, level, defectType, alertTimestamp) {
+  try {
+    console.log(`📧 Sending Level ${level} escalation alert for operator: ${operatorName}`);
+
+    // Get email configuration based on escalation level
+    const emailConfig = getEmailConfigForLevel(level, operatorName);
+
+    const mailOptions = {
+      from: 'fatimzahraelhansali@gmail.com',
+      to: emailConfig.recipients,
+      subject: emailConfig.subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+          <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #dc3545;">
+              <h1 style="color: #dc3545; margin: 0; font-size: 24px;">⚠️ ESCALATION NIVEAU ${level}</h1>
+              <p style="color: #6c757d; margin: 10px 0 0 0; font-size: 14px;">Système de Gestion Qualité - Notification Automatique</p>
+            </div>
+
+            <!-- Alert Level Badge -->
+            <div style="text-align: center; margin-bottom: 25px;">
+              <span style="background-color: ${level === 7 ? '#dc3545' : level === 5 ? '#fd7e14' : '#ffc107'}; 
+                               color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 16px;">
+                ${defectCount} Défauts Internes
+              </span>
+            </div>
+
+            <!-- Main Content -->
+            <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 20px; margin-bottom: 25px;">
+              ${emailConfig.message}
+            </div>
+
+            <!-- Operator Info -->
+            <div style="background-color: #e9ecef; border-radius: 6px; padding: 15px; margin-bottom: 25px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 5px 0; font-weight: bold; color: #495057; width: 150px;">Opérateur:</td>
+                  <td style="padding: 5px 0; color: #495057;">${operatorName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0; font-weight: bold; color: #495057;">Type de défaut:</td>
+                  <td style="padding: 5px 0; color: #495057;">${defectType}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0; font-weight: bold; color: #495057;">Nombre de défauts:</td>
+                  <td style="padding: 5px 0; color: #dc3545; font-weight: bold; font-size: 18px;">${defectCount}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0; font-weight: bold; color: #495057;">Niveau d'escalation:</td>
+                  <td style="padding: 5px 0; color: #495057;">Niveau ${level}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0; font-weight: bold; color: #495057;">Date et heure:</td>
+                  <td style="padding: 5px 0; color: #495057;">${alertTimestamp.toLocaleString('fr-FR', { timeZone: 'Africa/Casablanca' })}</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Footer -->
+            <div style="text-align: center; padding-top: 20px; border-top: 1px solid #dee2e6;">
+              <p style="font-size: 12px; color: #6c757d; margin: 0;">
+                Notification automatique générée par le Système de Gestion Qualité<br>
+                LEONI Wiring Systems - ${alertTimestamp.toLocaleDateString('fr-FR', { timeZone: 'Africa/Casablanca' })}
+              </p>
+            </div>
+
+          </div>
+        </div>
+      `
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`✅ Level ${level} email sent successfully:`, result.messageId);
+    console.log(`📧 Recipients: ${emailConfig.recipients}`);
+
+    return result;
+  } catch (error) {
+    console.error(`❌ Error sending Level ${level} email:`, error);
+    throw error;
+  }
+}
+
+/**
  * API Route: /api/alert-operator
  * Method: POST
  * Purpose: Send email alert when operator exceeds defect threshold
  */
 export default async function handler(req, res) {
+  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+  
+  // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ 
       success: false, 
@@ -124,149 +275,7 @@ export default async function handler(req, res) {
       success: false,
       error: 'Internal server error',
       details: error.message,
-      timestamp: alertTimestamp.toISOString()
+      timestamp: new Date().toISOString()
     });
   }
-}
-
-/**
- * Send escalation alert based on defect level
- */
-async function sendEscalationAlert(operatorName, defectCount, level, defectType, alertTimestamp) {
-  try {
-    console.log(`📧 Sending Level ${level} escalation alert for operator: ${operatorName}`);
-
-    // Get email configuration based on escalation level
-    const emailConfig = getEmailConfigForLevel(level, operatorName);
-
-    const mailOptions = {
-      from: 'fatimzahraelhansali@gmail.com',
-      to: emailConfig.recipients,
-      subject: emailConfig.subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
-          <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            
-            <!-- Header -->
-            <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #dc3545;">
-              <h1 style="color: #dc3545; margin: 0; font-size: 24px;">⚠️ ESCALATION NIVEAU ${level}</h1>
-              <p style="color: #6c757d; margin: 10px 0 0 0; font-size: 14px;">Système de Gestion Qualité - Notification Automatique</p>
-            </div>
-
-            <!-- Alert Level Badge -->
-            <div style="text-align: center; margin-bottom: 25px;">
-              <span style="background-color: ${level === 7 ? '#dc3545' : level === 5 ? '#fd7e14' : '#ffc107'}; 
-                           color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 16px;">
-                ${defectCount} Défauts Internes
-              </span>
-            </div>
-
-            <!-- Main Content -->
-            <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 20px; margin-bottom: 25px;">
-              ${emailConfig.message}
-            </div>
-
-            <!-- Operator Info -->
-            <div style="background-color: #e9ecef; border-radius: 6px; padding: 15px; margin-bottom: 25px;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 5px 0; font-weight: bold; color: #495057; width: 150px;">Opérateur:</td>
-                  <td style="padding: 5px 0; color: #495057;">${operatorName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 5px 0; font-weight: bold; color: #495057;">Nombre de défauts:</td>
-                  <td style="padding: 5px 0; color: #dc3545; font-weight: bold; font-size: 18px;">${defectCount}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 5px 0; font-weight: bold; color: #495057;">Niveau d'escalation:</td>
-                  <td style="padding: 5px 0; color: #495057;">Niveau ${level}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 5px 0; font-weight: bold; color: #495057;">Date et heure:</td>
-                  <td style="padding: 5px 0; color: #495057;">${alertTimestamp.toLocaleString('fr-FR', { timeZone: 'Africa/Casablanca' })}</td>
-                </tr>
-              </table>
-            </div>
-
-            <!-- Footer -->
-            <div style="text-align: center; padding-top: 20px; border-top: 1px solid #dee2e6;">
-              <p style="font-size: 12px; color: #6c757d; margin: 0;">
-                Notification automatique générée par le Système de Gestion Qualité<br>
-                LEONI Wiring Systems - ${alertTimestamp.toLocaleDateString('fr-FR', { timeZone: 'Africa/Casablanca' })}
-              </p>
-            </div>
-
-          </div>
-        </div>
-      `
-    };
-
-    const result = await transporter.sendMail(mailOptions);
-    console.log(`✅ Level ${level} email sent successfully:`, result.messageId);
-    console.log(`📧 Recipients: ${emailConfig.recipients}`);
-
-    return result;
-  } catch (error) {
-    console.error(`❌ Error sending Level ${level} email:`, error);
-    throw error;
-  }
-}
-
-/**
- * Get email configuration based on escalation level
- */
-function getEmailConfigForLevel(level, operatorName) {
-  // Define the recipients for all levels
-  const recipients = 'mehdifadil2103@gmail.com, erradilatifa6@gmail.com';
-  
-  const configs = {
-    3: {
-      recipients: recipients,
-      subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 3 défauts internes_Escalation_Niveau 1`,
-      message: `
-        Bonjour,<br><br>
-        L'opérateur <strong>${operatorName}</strong> a atteint <strong>3 défauts internes</strong> aujourd'hui.<br><br>
-        Conformément à notre procédure, une sensibilisation sur terrain est requise, incluant :<br>
-        • Une reformation immédiate par le formateur ligne,<br>
-        • Un entretien avec le Shift Leader, l'agent qualité, et le coordinateur formateur,<br>
-        • La signature d'un engagement écrit par l'opérateur.<br><br>
-        Merci de planifier cette action dans les plus brefs délais.<br><br>
-        Cordialement,<br>
-        <strong>Service qualité</strong>
-      `
-    },
-    5: {
-      recipients: recipients,
-      subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 5 défauts internes_Escalation_Niveau 2`,
-      message: `
-        Bonjour,<br><br>
-        L'opérateur <strong>${operatorName}</strong> a atteint <strong>5 défauts internes</strong> aujourd'hui.<br><br>
-        Il doit être orienté vers l'École de formation pour une requalification, incluant :<br>
-        • Un test de vigilance validé par l'agent qualité,<br>
-        • Un entretien avec le responsable segment, le responsable qualité, et le coordinateur formateur,<br>
-        • La signature d'un engagement écrit par l'opérateur.<br><br>
-        Merci de coordonner cette requalification rapidement.<br><br>
-        Cordialement,<br>
-        <strong>Service qualité</strong>
-      `
-    },
-    7: {
-      recipients: recipients,
-      subject: `RE: Notification – Sensibilisation opérateur ${operatorName} – 7 défauts internes_Escalation_Niveau 3`,
-      message: `
-        Bonjour,<br><br>
-        L'opérateur <strong>${operatorName}</strong> a atteint <strong>7 défauts internes</strong> aujourd'hui.<br><br>
-        Une 2ème requalification à l'École de formation est requise, accompagnée de :<br>
-        • Un entretien avec le PSM, le Responsable Qualité Site, le Responsable Formation École, et le Head of HR,<br>
-        • Une décision à prendre :<br>
-        &nbsp;&nbsp;→ Si l'opérateur montre un engagement clair → 3ème chance accordée,<br>
-        &nbsp;&nbsp;→ Sinon → réorientation ou fin de contrat.<br><br>
-        Merci de traiter ce dossier avec attention et diligence.<br><br>
-        Cordialement,<br>
-        <strong>Service qualité</strong>
-      `
-    }
-  };
-
-  return configs[level] || configs[3]; // Default to level 3 if level not found
 }
