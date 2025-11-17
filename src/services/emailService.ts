@@ -139,7 +139,7 @@ export const emailService = {
       console.log(`Defect Count: ${defectCount}`);
       console.log(`Defect Type: ${defectType}`);
       console.log(`Alert Level: ${alertLevel}`);
-      console.log(`Timestamp: ${timestamp.toLocaleString('fr-FR')}`);
+      console.log(`Timestamp: ${new Date(toISO(timestamp)).toLocaleString('fr-FR')}`);
       console.log(`API URL: ${API_SERVER_URL}/api/alert-operator`);
       console.log(`Error: ${error}`);
       console.log('='.repeat(80) + '\n');
