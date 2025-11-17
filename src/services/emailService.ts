@@ -10,7 +10,7 @@ export interface EmailAlert {
 
 // API server configuration
 const API_SERVER_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://reworkqualityleonisystem.netlify.app'
+  ? ''
   : 'http://localhost:3001';
 
 // Track sent alerts to avoid duplicates
