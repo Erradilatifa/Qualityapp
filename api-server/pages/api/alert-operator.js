@@ -11,8 +11,30 @@ const transporter = nodemailer.createTransport({
 
 const ALLOWED_ORIGINS = [
   'https://reworkqualityleonisystem.netlify.app',
-  'https://qualityapp-v2.vercel.app'
+  'https://qualityapp-v2.vercel.app',
+  'https://zesty-paprenjak-741d94.netlify.app'
 ];
+
+// CORS middleware
+const allowCors = (fn) => async (req, res) => {
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+    );
+  }
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  return await fn(req, res);
+};
 
 /**
  * Get email configuration based on escalation level
@@ -165,7 +187,17 @@ async function sendEscalationAlert(operatorName, defectCount, level, defectType,
  * Method: POST
  * Purpose: Send email alert when operator exceeds defect threshold
  */
-export default async function handler(req, res) {
+module.exports = allowCors(async function handler(req, res) {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
   // Set CORS headers
   const origin = req.headers.origin;
   if (ALLOWED_ORIGINS.includes(origin)) {
