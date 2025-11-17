@@ -1,4 +1,29 @@
 const nodemailer = require('nodemailer');
+const Cors = require('cors');
+
+// Initialiser le middleware CORS
+const cors = Cors({
+  origin: [
+    'https://reworkqualityleonisystem.netlify.app',
+    'https://qualityapp-v2.vercel.app',
+    'https://zesty-paprenjak-741d94.netlify.app'
+  ],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+});
+
+// Helper pour exécuter le middleware
+function runMiddleware(req, res, fn) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve(result);
+    });
+  });
+}
 
 // Create Gmail transporter with direct credentials
 const transporter = nodemailer.createTransport({
@@ -9,30 +34,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const ALLOWED_ORIGINS = [
-  'https://reworkqualityleonisystem.netlify.app',
-  'https://qualityapp-v2.vercel.app',
-  'https://zesty-paprenjak-741d94.netlify.app'
-];
-
-// CORS middleware
-const corsMiddleware = (handler) => async (req, res) => {
-  const origin = req.headers.origin;
-  
-  // Set CORS headers for all responses
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return { end: true }; // Return early for OPTIONS
-  }
-
-  return handler(req, res);
-};
+// Suppression de l'ancien middleware CORS personnalisé
 
 /**
  * Get email configuration based on escalation level
@@ -300,15 +302,12 @@ async function handler(req, res) {
   }
 }
 
-// Apply CORS middleware to the handler
-const wrappedHandler = corsMiddleware(handler);
-
+// Exporter le handler avec le middleware CORS
 module.exports = async (req, res) => {
-  const result = await wrappedHandler(req, res);
-  // If the middleware returned an object with end:true, don't continue
-  if (result?.end) return;
+  // Exécuter le middleware CORS
+  await runMiddleware(req, res, cors);
   
-  // Otherwise, handle the request
+  // Gérer la requête
   try {
     await handler(req, res);
   } catch (error) {

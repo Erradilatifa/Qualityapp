@@ -35,8 +35,11 @@ export class AlertService {
 
       const response = await fetch(`${API_SERVER_URL}${ALERT_ENDPOINT}`, {
         method: 'POST',
+        mode: 'cors',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           operatorId: operatorData.id,
