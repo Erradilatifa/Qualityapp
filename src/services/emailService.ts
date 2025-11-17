@@ -91,7 +91,7 @@ export const emailService = {
       console.log(`📧 Sending Level ${alertLevel} alert for ${operatorName} via API server...`);
       
       // Call the API server to send the email
-      const response = await fetch(`${API_SERVER_URL}/alert-operator`, {
+      const response = await fetch(`${API_SERVER_URL}/api/alert-operator`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
