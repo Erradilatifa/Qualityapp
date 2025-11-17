@@ -10,8 +10,8 @@ export interface EmailAlert {
 
 // API server configuration
 const API_SERVER_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://qualityapp-v2.vercel.app/api'
-  : 'http://localhost:3001/api';
+  ? 'https://qualityapp-v2.vercel.app'
+  : 'http://localhost:3001';
 
 // Track sent alerts to avoid duplicates
 const sentAlerts = new Map<string, Set<number>>();
@@ -91,7 +91,7 @@ export const emailService = {
       console.log(`📧 Sending Level ${alertLevel} alert for ${operatorName} via API server...`);
       
       // Call the API server to send the email
-      const response = await fetch(`${API_SERVER_URL}/api/alert-operator`, {
+      const response = await fetch(`${API_SERVER_URL}/alert-operator`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
