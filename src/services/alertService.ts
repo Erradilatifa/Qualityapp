@@ -4,8 +4,8 @@ import { operatorService } from './database';
 const API_SERVER_URL = process.env.NODE_ENV === 'production' 
   ? 'https://qualityapp-v2.vercel.app'
   : 'http://localhost:3001';
-const ALERT_ENDPOINT = '/api/alert-operator';
-const TEST_ENDPOINT = '/api/test-email';
+const ALERT_ENDPOINT = '/alert-operator';
+const TEST_ENDPOINT = '/test-email';
 
 /**
  * Service for handling operator alerts via API server

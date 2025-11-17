@@ -16,24 +16,23 @@ const ALLOWED_ORIGINS = [
 ];
 
 // CORS middleware
-const allowCors = (fn) => async (req, res) => {
+const corsMiddleware = (handler) => async (req, res) => {
   const origin = req.headers.origin;
+  
+  // Set CORS headers
   if (ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-      'Access-Control-Allow-Headers',
-      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-    );
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   }
 
-  // Handle preflight
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  return await fn(req, res);
+  return handler(req, res);
 };
 
 /**
@@ -187,32 +186,7 @@ async function sendEscalationAlert(operatorName, defectCount, level, defectType,
  * Method: POST
  * Purpose: Send email alert when operator exceeds defect threshold
  */
-module.exports = allowCors(async function handler(req, res) {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  const origin = req.headers.origin;
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
-  // Set CORS headers
-  const origin = req.headers.origin;
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.status(200).end();
-    return;
-  }
+async function handler(req, res) {
   
   // Only allow POST requests
   if (req.method !== 'POST') {
@@ -320,3 +294,6 @@ module.exports = allowCors(async function handler(req, res) {
     });
   }
 }
+
+// Apply CORS middleware to the handler
+module.exports = corsMiddleware(handler);
